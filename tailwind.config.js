@@ -9,14 +9,14 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-     extend: {
+    extend: {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        primary: ' Helvetica Neue'
-      }
+        lato: ["Lato", "sans-serif"],
+      },
     },
   },
   plugins: [],
