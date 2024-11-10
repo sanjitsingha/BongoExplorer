@@ -2,7 +2,7 @@
 import { React, useState } from "react";
 import { registerUser } from "../auth";
 
-const page = () => {
+const Page = () => {
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [Name, setName] = useState("");
@@ -69,4 +69,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;
