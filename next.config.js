@@ -7,4 +7,4 @@ const nextConfig = {
     appDir: true,
   },
 };
-export default nextConfig;
+module.exports = nextConfig;
