@@ -3,7 +3,6 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { Client, Databases, Query } from "appwrite";
 import { X, ChevronLeft, ChevronRight, Dot } from "lucide-react"; // Using lucide icons
-import WeatherModule from "../../openweather/page";
 
 export default function Page({ params }) {
   // const updatedDate = params.$updatedAt;

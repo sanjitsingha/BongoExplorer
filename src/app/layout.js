@@ -1,4 +1,5 @@
 "use client";
+import "./globals.css";
 import { usePathname } from "next/navigation";
 import localFont from "next/font/local";
 
