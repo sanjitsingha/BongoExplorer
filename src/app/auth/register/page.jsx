@@ -3,15 +3,15 @@ import { React, useState } from "react";
 import { registerUser } from "../auth";
 
 const page = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [error, setError] = useState(null);
+  const [Email, setEmail] = useState("");
+  const [Password, setPassword] = useState("");
+  const [Name, setName] = useState("");
+  const [Error, setError] = useState(null);
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const user = await registerUser(email, password, name);
+      const user = await registerUser(Email, Password, Name);
       console.log("User registered:", user);
       // Optionally, redirect to login page
     } catch (err) {
@@ -32,7 +32,7 @@ const page = () => {
             <p>Full Name</p>
             <input
               type="text"
-              value={name}
+              value={Name}
               placeholder="Enter you full name"
               className="bg-gray-200 w-[60%] h-[40px] py-1 px-2 text-lg outline-none rounded-md placeholder:text-sm mt-1"
               onChange={(e) => setName(e.target.value)}
@@ -40,7 +40,7 @@ const page = () => {
             <p className="mt-3">Email</p>
             <input
               type="email"
-              value={email}
+              value={Email}
               placeholder="Enter your email"
               className="bg-gray-200 w-[60%] h-[40px] py-1 px-2 text-lg outline-none rounded-md placeholder:text-sm mt-1"
               onChange={(e) => setEmail(e.target.value)}
@@ -48,7 +48,7 @@ const page = () => {
             <p className="mt-3">Email</p>
             <input
               type="password"
-              value={password}
+              value={Password}
               placeholder="Enter your password"
               className="bg-gray-200 w-[60%] h-[40px] py-1 px-2 text-lg outline-none rounded-md placeholder:text-sm mt-1"
               onChange={(e) => setPassword(e.target.value)}
@@ -60,7 +60,7 @@ const page = () => {
               >
                 Create Account
               </button>
-              {error && <p style={{ color: "red" }}>{error}</p>}
+              {Error && <p style={{ color: "red" }}>{Error}</p>}
             </div>
           </form>
         </div>
