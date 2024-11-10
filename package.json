@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "vercel-build": "npm install --legacy-peer-deps && next build",
+    "vercel-build": "npm install --legacy-peer-deps && npm install tailwindcss postcss autoprefixer && next build",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -20,9 +20,10 @@
     "swiper": "^11.1.14"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.20",
     "eslint": "^8",
     "eslint-config-next": "15.0.1",
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1"
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14"
   }
 }
