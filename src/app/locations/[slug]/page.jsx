@@ -162,7 +162,7 @@ export default function Page({ params }) {
           </div>
         </div>
 
-        {/* Image Gallery */}
+        {/* Image Galleryy */}
         <div className="mt-8">
           <h2 className="text-2xl font-semibold mb-4">Gallery</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
