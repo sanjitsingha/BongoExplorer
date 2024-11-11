@@ -2,16 +2,30 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Client, Databases, Query } from "appwrite";
-import { X, ChevronLeft, ChevronRight, Dot } from "lucide-react"; // Using lucide icons
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Page({ params }) {
-  // const updatedDate = params.$updatedAt;
-
   const [LocationDetail, setLocationDetail] = useState();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [weatherData, setWeatherData] = useState(null);
 
   const { slug } = React.use(params);
+
+  const fetchWeatherData = async (lat, lon) => {
+    const apiKey = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
+    try {
+      const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`
+      );
+      const data = await response.json();
+      setWeatherData(data);
+      console.log(data);
+    } catch (error) {
+      console.log("Error fetching weather data:", error);
+    }
+  };
+
   useEffect(() => {
     const client = new Client()
       .setEndpoint("https://cloud.appwrite.io/v1")
@@ -24,23 +38,26 @@ export default function Page({ params }) {
         Query.equal("slug", slug),
       ])
       .then((response) => {
-        return setLocationDetail(response.documents[0]);
+        const location = response.documents[0];
+        setLocationDetail(location);
+        if (location?.Latitude && location?.Longitude) {
+          fetchWeatherData(location.Latitude, location.Longitude);
+        }
       })
+
       .catch((error) => {
         console.log(error);
       });
-  }, []);
+  }, [slug]);
 
   const openLightbox = (index) => {
     setCurrentImageIndex(index);
     setLightboxOpen(true);
-    // Prevent scrolling when lightbox is open
     document.body.style.overflow = "hidden";
   };
 
   const closeLightbox = () => {
     setLightboxOpen(false);
-    // Restore scrolling
     document.body.style.overflow = "unset";
   };
 
@@ -62,7 +79,6 @@ export default function Page({ params }) {
     }
   };
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!lightboxOpen) return;
@@ -87,52 +103,61 @@ export default function Page({ params }) {
   }, [lightboxOpen, LocationDetail?.Images?.length]);
 
   return (
-    <div className="flex items-center justify-center  w-full ">
-      {/* <WeatherModule props={LocationDetail} /> */}
-      <div className=" h-screen w-[1200px] max-w-[1200px]  mt-20">
+    <div className="flex items-center justify-center w-full min-h-screen px-4 md:px-6 lg:px-8">
+      <div className="w-full max-w-[1200px] mt-16 md:mt-20">
         {/* Hero Section */}
         <div className="mb-8">
-          <img
-            src={LocationDetail?.PreviewImage}
-            alt={LocationDetail?.Name}
-            className=" w-[1200px] h-[400px] items-center object-cover rounded-lg mb-4"
-          />
-          <div className="flex justify-between text-black">
-            <h1 className="text-3xl font-bold mb-4">{LocationDetail?.Name}</h1>
+          <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] mb-4">
+            <img
+              src={LocationDetail?.PreviewImage}
+              alt={LocationDetail?.Name}
+              className="w-full h-full object-cover rounded-lg"
+            />
+          </div>
+
+          {/* Title and Date Section */}
+          <div className="flex flex-col md:flex-row md:justify-between text-black mb-4 gap-2">
+            <h1 className="text-2xl md:text-3xl font-bold">
+              {LocationDetail?.Name}
+            </h1>
             <p className="text-sm">
-              Last Updated on :{" "}
+              Last Updated on:{" "}
               {LocationDetail?.$updatedAt &&
                 new Date(LocationDetail.$updatedAt).toDateString()}
             </p>
           </div>
-          <div className="flex gap-60">
-            <div>
-              {" "}
+
+          {/* Description and Weather Section */}
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
+            <div className="flex-1">
               <p className="text-gray-700">{LocationDetail?.Descriptions}</p>
             </div>
 
-            <div>
-              <div className="flex items-center ">
-                <div className="font-bold">{LocationDetail?.Name} </div>
+            <div className="w-full lg:w-auto">
+              <div className="flex items-center mb-2">
+                <div className="font-bold">{LocationDetail?.Name}</div>
               </div>
-              {/* Report Module */}
-              <div className="w-fit rounded-md overflow-hidden h-[100px]  flex">
-                {/* Today Weather */}
-                <div className="bg-emerald-300 p-2 px-4 flex flex-col items-center w-[150px] justify-center">
-                  <div className="w-full text-center text-2xl font-bold">
-                    32°
+              {/* Weather Module */}
+              {weatherData ? (
+                <div className="w-full lg:w-[250px] rounded-md overflow-hidden h-[100px] flex">
+                  <div className="bg-emerald-300 p-2 px-4 flex flex-col items-center flex-1 lg:w-[150px] justify-center">
+                    <div className="w-full text-center text-2xl font-bold">
+                      {Math.round(weatherData.main.temp)}°
+                    </div>
+                    <div>{weatherData.weather[0].description}</div>
                   </div>
-                  <div>Sunny</div>
+                  <div className="flex flex-col h-full w-[100px]">
+                    <div className="bg-blue-700 flex-1 items-center justify-center flex text-white">
+                      MAX: {Math.round(weatherData.main.temp_max)}°
+                    </div>
+                    <div className="bg-orange-300 flex-1 items-center justify-center flex">
+                      MIN: {Math.round(weatherData.main.temp_min)}°
+                    </div>
+                  </div>
                 </div>
-                <div className=" flex flex-col h-full w-[100px]">
-                  <div className="bg-blue-700 flex-1 items-center justify-center flex">
-                    MAX: 43°
-                  </div>
-                  <div className="bg-orange-300 flex-1 items-center justify-center flex">
-                    MIN: 12°
-                  </div>
-                </div>
-              </div>
+              ) : (
+                <p>Weather is Loading</p>
+              )}
             </div>
           </div>
         </div>
@@ -140,7 +165,7 @@ export default function Page({ params }) {
         {/* Image Gallery */}
         <div className="mt-8">
           <h2 className="text-2xl font-semibold mb-4">Gallery</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
             {LocationDetail?.Images?.map((imageUrl, index) => (
               <div
                 key={index}
@@ -149,7 +174,7 @@ export default function Page({ params }) {
               >
                 <img
                   src={imageUrl}
-                  alt={`${LocationDetail.Name} - Image ${index + 1}`}
+                  alt={`${LocationDetail?.Name} - Image ${index + 1}`}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
               </div>
@@ -160,7 +185,7 @@ export default function Page({ params }) {
         {/* Lightbox */}
         {lightboxOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
+            className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
             onClick={closeLightbox}
           >
             <button
@@ -174,32 +199,32 @@ export default function Page({ params }) {
               <>
                 <button
                   onClick={prevImage}
-                  className="absolute left-4 text-white hover:text-gray-300 z-50"
+                  className="absolute left-2 md:left-4 text-white hover:text-gray-300 z-50"
                 >
-                  <ChevronLeft size={40} />
+                  <ChevronLeft size={32} className="md:w-10 md:h-10" />
                 </button>
 
                 <button
                   onClick={nextImage}
-                  className="absolute right-4 text-white hover:text-gray-300 z-50"
+                  className="absolute right-2 md:right-4 text-white hover:text-gray-300 z-50"
                 >
-                  <ChevronRight size={40} />
+                  <ChevronRight size={32} className="md:w-10 md:h-10" />
                 </button>
               </>
             )}
 
             <div
-              className="relative max-w-[90vw] max-h-[90vh]"
+              className="relative w-full h-full flex items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={LocationDetail?.Images[currentImageIndex]}
                 alt={`${LocationDetail?.Name} - Image ${currentImageIndex + 1}`}
-                className="max-h-[90vh] max-w-[90vw] object-contain"
+                className="max-h-[85vh] max-w-full object-contain"
               />
 
               {/* Image counter */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-50 px-4 py-2 rounded-full">
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-50 px-4 py-2 rounded-full text-sm">
                 {currentImageIndex + 1} / {LocationDetail?.Images?.length}
               </div>
             </div>

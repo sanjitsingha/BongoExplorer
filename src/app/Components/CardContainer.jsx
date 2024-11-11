@@ -1,86 +1,114 @@
 "use client";
-import { React, useState, useEffect } from "react";
+import { React, useState, useEffect, useMemo } from "react";
 import { Client, Databases, Query } from "appwrite";
 import CardContainerSkeleton from "./CardSkeleton";
 import Card from "./Card";
 import { Filter, X } from "lucide-react";
 
+const APPWRITE_CONFIG = {
+  endpoint: "https://cloud.appwrite.io/v1",
+  projectId: process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID,
+  databaseId: "671e7595000efb31b37a",
+  collectionId: "671e75a1001a8d6feb6c",
+};
+
+const CATEGORIES = ["Hills", "River", "Picnic Spot", "Off Beat", "Waterfall"];
+
+const ITEMS_PER_PAGE = {
+  MOBILE: 4,
+  DESKTOP: 8,
+};
+
 const client = new Client()
-  .setEndpoint("https://cloud.appwrite.io/v1")
-  .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
+  .setEndpoint(APPWRITE_CONFIG.endpoint)
+  .setProject(APPWRITE_CONFIG.projectId);
 
 const databases = new Databases(client);
 
-// Define your categories - you can move this to a config file
-const CATEGORIES = [
-  "Hills",
-  "River",
-  "Picnic Spot",
-  "Off Beat",
-  "Waterfall"
-];
-
 const CardContainer = () => {
-  const [place, setPlace] = useState([]);
+  const [places, setPlaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
-  const [NumberofDocuments, setNumberofDocuments] = useState("");
-  const [FilterDiv, setFilterDiv] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE.DESKTOP);
+
+  // Check for mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setVisibleItems(mobile ? ITEMS_PER_PAGE.MOBILE : ITEMS_PER_PAGE.DESKTOP);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
-        let queries = [Query.orderDesc("$createdAt"),
-          Query.equal("Active", true)
-
+        setIsLoading(true);
+        const queries = [
+          Query.orderDesc("$createdAt"),
+          Query.equal("Active", true),
+          ...(selectedCategories.length > 0
+            ? [Query.search("Categories", selectedCategories.join(" "))]
+            : []),
         ];
-        
-        // Add category filter if categories are selected
-        if (selectedCategories.length > 0) {
-          queries.push(Query.search("Categories", selectedCategories.join(" ")));
-        }
 
         const response = await databases.listDocuments(
-          "671e7595000efb31b37a",
-          "671e75a1001a8d6feb6c",
+          APPWRITE_CONFIG.databaseId,
+          APPWRITE_CONFIG.collectionId,
           queries
         );
-        setPlace(response.documents);
-        setNumberofDocuments(response.total);
+
+        setPlaces(response.documents);
+        setError(null);
       } catch (error) {
         console.error("Failed to fetch places:", error);
-        setError(error.message);
+        setError("Unable to load locations. Please try again later.");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPlaces();
-  }, [selectedCategories]); // Add selectedCategories as dependency
+  }, [selectedCategories]);
+
+  const filteredPlaces = useMemo(() => {
+    if (!searchTerm) return places;
+
+    return places.filter((item) =>
+      item.Name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [places, searchTerm]);
+
+  const visiblePlaces = useMemo(() => {
+    return filteredPlaces.slice(0, visibleItems);
+  }, [filteredPlaces, visibleItems]);
+
+  const toggleCategory = (category) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const handleLoadMore = () => {
+    setVisibleItems(
+      (prev) =>
+        prev + (isMobile ? ITEMS_PER_PAGE.MOBILE : ITEMS_PER_PAGE.DESKTOP)
+    );
+  };
 
   if (isLoading) {
     return <CardContainerSkeleton />;
   }
-
-  const filteredPlaces = place.filter((item) =>
-    item.Name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const toggleCategory = (category) => {
-    setSelectedCategories(prev => {
-      if (prev.includes(category)) {
-        return prev.filter(c => c !== category);
-      } else {
-        return [...prev, category];
-      }
-    });
-  };
-
-  const clearFilters = () => {
-    setSelectedCategories([]);
-  };
 
   return (
     <div className="container mx-auto px-4">
@@ -89,7 +117,7 @@ const CardContainer = () => {
         <div className="bg-[#C6CCB2] border-2 rounded-lg w-[90%] h-[50px] flex overflow-hidden mt-4 mb-10">
           <input
             type="text"
-            placeholder="Enter your keywords(Locations name)"
+            placeholder="Enter your keywords (Location name)"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full h-full outline-none border-none bg-transparent px-4 py-2 text-[#093824] placeholder:text-[#093824]"
@@ -98,7 +126,7 @@ const CardContainer = () => {
       </div>
 
       {/* Category Filters */}
-      {FilterDiv && (
+      {showFilters && (
         <div className="mb-6">
           <div className="flex flex-wrap items-center justify-center gap-4">
             {CATEGORIES.map((category) => (
@@ -116,7 +144,7 @@ const CardContainer = () => {
             ))}
             {selectedCategories.length > 0 && (
               <button
-                onClick={clearFilters}
+                onClick={() => setSelectedCategories([])}
                 className="flex items-center gap-1 py-2 px-4 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors"
               >
                 <X size={16} /> Clear Filters
@@ -126,19 +154,26 @@ const CardContainer = () => {
         </div>
       )}
 
-      {error && <div className="text-red-500 text-center mb-4">The server are bussy</div>}
+      {error && (
+        <div className="text-red-500 text-center mb-4 p-4 bg-red-50 rounded-lg">
+          {error}
+        </div>
+      )}
 
       {/* Header */}
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-[#093824] text-lg font-bold">Newly Discovered</h1>
 
         <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setFilterDiv(!FilterDiv)} 
+          <button
+            onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-1 text-[#093824] hover:opacity-80 transition-all"
           >
             <Filter color="#093824" size={20} />
-            Filter {selectedCategories.length > 0 && `(${selectedCategories.length})`} |
+            Filter{" "}
+            {selectedCategories.length > 0 &&
+              `(${selectedCategories.length})`}{" "}
+            |
           </button>
           <p className="text-[#093824]">
             {filteredPlaces.length} Locations Found
@@ -148,10 +183,22 @@ const CardContainer = () => {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-x-clip p-3 md:p-0">
-        {filteredPlaces.map((place) => (
+        {visiblePlaces.map((place) => (
           <Card key={place.slug} place={place} />
         ))}
       </div>
+
+      {/* Discover More Button */}
+      {visibleItems < filteredPlaces.length && (
+        <div className="flex justify-center mt-8 mb-12">
+          <button
+            onClick={handleLoadMore}
+            className="bg-[#093824] text-white px-8 py-3 rounded-xl hover:opacity-90 transition-all"
+          >
+            Discover More
+          </button>
+        </div>
+      )}
     </div>
   );
 };
