@@ -1,5 +1,7 @@
 "use client";
 import "./globals.css";
+import { umamiConfig } from "./lib/umami";
+
 import { usePathname } from "next/navigation";
 import localFont from "next/font/local";
 
@@ -30,6 +32,16 @@ export default function RootLayout({ children }) {
     pathname.startsWith("/auth/register") || pathname.startsWith("/auth/login");
   return (
     <html lang="en">
+      <head>
+        <script
+          async
+          defer
+          data-website-id={umamiConfig.websiteId}
+          src={umamiConfig.scriptUrl}
+          data-do-not-track="true"
+          data-cache="true"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

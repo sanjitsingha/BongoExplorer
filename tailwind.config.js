@@ -15,7 +15,7 @@ module.exports = {
         foreground: "var(--foreground)",
       },
       fontFamily: {
-        lato: ["Lato", "sans-serif"],
+        primary: ["Inter", "sans-serif"],
       },
     },
   },
