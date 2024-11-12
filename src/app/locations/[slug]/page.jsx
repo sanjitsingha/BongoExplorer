@@ -2,15 +2,30 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Client, Databases, Query } from "appwrite";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Bookmark,
+  BookmarkCheck,
+} from "lucide-react";
 
 export default function Page({ params }) {
   const [LocationDetail, setLocationDetail] = useState();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [weatherData, setWeatherData] = useState(null);
+  const [isBookmarked, setIsBookmarked] = useState(true);
 
   const { slug } = React.use(params);
+
+  const checkBookMark = () => {
+    if (isBookmarked) {
+      setIsBookmarked(false);
+    } else {
+      setIsBookmarked(true);
+    }
+  };
 
   const fetchWeatherData = async (lat, lon) => {
     const apiKey = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY;
@@ -20,7 +35,6 @@ export default function Page({ params }) {
       );
       const data = await response.json();
       setWeatherData(data);
-      console.log(data);
     } catch (error) {
       console.log("Error fetching weather data:", error);
     }
@@ -108,6 +122,18 @@ export default function Page({ params }) {
         {/* Hero Section */}
         <div className="mb-8">
           <div className="relative w-full h-[200px] sm:h-[300px] md:h-[400px] mb-4">
+            <div className="absolute py-2 flex justify-center items-center px-3 rounded-tl-lg right-0 bottom-0  bg-white ">
+              {isBookmarked ? (
+                <BookmarkCheck
+                  color="green"
+                  fill="green"
+                  className="cursor-pointer"
+                  onClick={checkBookMark}
+                />
+              ) : (
+                <Bookmark className="cursor-pointer" onClick={checkBookMark} />
+              )}
+            </div>
             <img
               src={LocationDetail?.PreviewImage}
               alt={LocationDetail?.Name}

@@ -1,10 +1,9 @@
 "use client";
 import "./globals.css";
 import { umamiConfig } from "./lib/umami";
-
+import { AuthProvider } from "./context/AuthContext";
 import { usePathname } from "next/navigation";
 import localFont from "next/font/local";
-
 import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import Navbar from "./Components/Navbar";
@@ -45,10 +44,12 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <NextTopLoader showSpinner={false} />
-        <Navbar />
-        {children}
-        {!isAuthPage && <Footer />}
+        <AuthProvider>
+          <NextTopLoader showSpinner={false} />
+          <Navbar />
+          {children}
+          {!isAuthPage && <Footer />}
+        </AuthProvider>
       </body>
     </html>
   );
