@@ -1,6 +1,5 @@
 "use client";
 import { React, useState } from "react";
-import { registerUser } from "../auth";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,6 +13,7 @@ const Page = () => {
   const [Name, setName] = useState("");
   const [Error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  
 
   const notify = () => toast("Account created successfully!");
 

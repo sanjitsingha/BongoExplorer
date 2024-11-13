@@ -1,45 +1,53 @@
+import React from "react";
+import { useEffect } from "react";
 // authService.js
+import { useState } from "react";
 import { account } from "../appwrite/appwrite.config.js";
 
-// Register a new user
-export const registerUser = async (email, password, name) => {
-  try {
-    const user = await account.create("unique()", email, password, name);
-    return user;
-  } catch (error) {
-    console.error("Registration error:", error);
-    throw error;
-  }
+const auth = () => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const login = async (email, password) => {
+    try {
+      const response = await account.createEmailPasswordSession(
+        email,
+        password
+      );
+      setUser(response);
+    } catch (error) {
+      console.error("Error logging in:", error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await account.deleteSession("current");
+      setUser(null);
+      console.log("logged out");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      try {
+        const currentUser = await account.get();
+        setUser(currentUser);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error getting current user:", error);
+        setIsLoading(false);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
+
+  return { user, login, logout, isLoading };
 };
 
-// Login user
-export const loginUser = async (email, password) => {
-  try {
-    const session = await account.createEmailSession(email, password);
-    return session;
-  } catch (error) {
-    console.error("Login error:", error);
-    throw error;
-  }
-};
-
-// Logout user
-export const logoutUser = async () => {
-  try {
-    await account.deleteSession("current");
-  } catch (error) {
-    console.error("Logout error:", error);
-    throw error;
-  }
-};
-
-// Check if user is logged in
-export const getCurrentUser = async () => {
-  try {
-    const user = await account.get();
-    return user;
-  } catch (error) {
-    console.error("User session error:", error);
-    return null;
-  }
-};
+export default auth;

@@ -1,11 +1,24 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import { React, useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "../context/AuthContext";
-
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { useContext } from "react";
+import { AuthContext } from "../auth/authprovider";
 
 const Navbar = () => {
+  const { user, login, logout, isLoading } = useContext(AuthContext);
+  const [menuOpen, setMenuOpen] = useState(false);
+  // console.log(user);
+
+  const togleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setMenuOpen(false);
+  };
+
   return (
     <>
       <div className="relative max-w-[1200px] mx-auto">
@@ -14,28 +27,40 @@ const Navbar = () => {
             <div className="text-xl font-bold">
               <Link href="/">BE</Link>
             </div>
+            {user ? (
+              <div
+                onClick={togleMenu}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <p className="font-semibold">Hii, {user?.name}</p>
+                {menuOpen ? <ChevronUp /> : <ChevronDown />}
+              </div>
+            ) : (
+              ""
+            )}
 
-            <div className="flex items-center gap-2 cursor-pointer">
-              <p className="font-semibold">Hii,</p>
-              <ChevronDown />
-            </div>
-
-            <div className="bg-[#093824] text-white py-1 px-3 rounded-sm">
-              <Link href={"/auth/login"}>Login</Link>
-            </div>
+            {!user ? (
+              <div className="bg-[#093824] text-white py-1 px-3 rounded-sm">
+                <Link href={"/auth/login"}>Login</Link>
+              </div>
+            ) : (
+              ""
+            )}
           </div>
         </div>
 
-        <div className=" bg-white w-[300px] hidden z-50 fixed top-[60px] shadow-md right-[180px] p-3">
-          <div className="flex flex-col gap-2">
-            <div>Profile</div>
-            <div>Profile</div>
-            <div>Profile</div>
-            <div className="w-full bg-black text-white text-center py-2 cursor-pointer">
-              <button>Log out</button>
+        {menuOpen && (
+          <div className=" bg-white w-[300px]  z-50 fixed top-[60px] shadow-md right-[180px] p-3">
+            <div className="flex flex-col gap-2">
+              <div>Profile</div>
+              <div>Profile</div>
+              <div>Profile</div>
+              <div className="w-full bg-black text-white text-center py-2 cursor-pointer">
+                <button onClick={handleLogout}>Log out</button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

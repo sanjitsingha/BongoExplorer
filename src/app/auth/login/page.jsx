@@ -1,16 +1,17 @@
 "use client";
 import { React, useState } from "react";
-import { loginUser } from "../auth";
 import { Eye, EyeOff } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { account } from "@/app/appwrite/appwrite.config";
 import { useRouter, usePathname } from "next/navigation";
+import { useContext } from "react";
+import { AuthContext } from "../../auth/authprovider";
 
 const page = () => {
   const router = useRouter();
   const notify = () => toast("Account created successfully!");
-
+  const { login } = useContext(AuthContext);
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [Error, setError] = useState(null);
@@ -27,7 +28,7 @@ const page = () => {
       console.log("User is already logged in.");
     } catch (error) {
       try {
-        const user = await account.createEmailPasswordSession(Email, Password);
+        await login(Email, Password);
         notify();
         router.push("/");
         // Optionally, redirect to login page
@@ -80,6 +81,7 @@ const page = () => {
             {Error && <p style={{ color: "red" }}>{Error}</p>}
           </div>
         </form>
+        <ToastContainer />
         <p className="mt-4 text-center">Forgot your password?</p>
       </div>
     </div>
