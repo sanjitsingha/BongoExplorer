@@ -81,7 +81,9 @@ const page = () => {
             {Error && <p style={{ color: "red" }}>{Error}</p>}
           </div>
         </form>
-        <p className="mt-4 text-center">Forgot your password?</p>
+        <Link href="/auth/forgot">
+          <p className="mt-4 text-center">Forgot your password?</p>
+        </Link>
         <Link href="/auth/register">
           <p className="mt-4 text-center font-bold">Create an account</p>
         </Link>
