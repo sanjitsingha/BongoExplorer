@@ -1,21 +1,21 @@
 "use client";
 import { React, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { account } from "@/app/appwrite/appwrite.config";
 import { useRouter, usePathname } from "next/navigation";
 import { useContext } from "react";
 import { AuthContext } from "../../auth/authprovider";
+import Link from "next/link";
 
 const page = () => {
   const router = useRouter();
-  const notify = () => toast("Account created successfully!");
   const { login } = useContext(AuthContext);
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
-  const [Error, setError] = useState(null);
+  const [Error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const togglePasswordVisibility = () => {
     showPassword ? setShowPassword(false) : setShowPassword(true);
@@ -23,20 +23,20 @@ const page = () => {
 
   const loginUser = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       await account.get();
       console.log("User is already logged in.");
     } catch (error) {
       try {
         await login(Email, Password);
-        notify();
         router.push("/");
-        // Optionally, redirect to login page
       } catch (err) {
-        setError(err.message);
+        setError("Invalid email or password");
       }
     }
   };
+
   return (
     <div className=" h-screen flex justify-center items-center w-[100vw]">
       <div className="w-[350px]">
@@ -81,8 +81,10 @@ const page = () => {
             {Error && <p style={{ color: "red" }}>{Error}</p>}
           </div>
         </form>
-        <ToastContainer />
         <p className="mt-4 text-center">Forgot your password?</p>
+        <Link href="/auth/register">
+          <p className="mt-4 text-center font-bold">Create an account</p>
+        </Link>
       </div>
     </div>
   );

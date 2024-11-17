@@ -3,19 +3,17 @@ import { React, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { AuthContext } from "../authprovider";
+import { useContext } from "react";
 
 const Page = () => {
+  const { registerUser } = useContext(AuthContext);
   const router = useRouter();
   const [Email, setEmail] = useState("");
   const [Password, setPassword] = useState("");
   const [Name, setName] = useState("");
   const [Error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  
-
-  const notify = () => toast("Account created successfully!");
 
   const togglePasswordVisibility = () => {
     showPassword ? setShowPassword(false) : setShowPassword(true);
@@ -24,12 +22,8 @@ const Page = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const user = await registerUser(Email, Password, Name);
-      console.log("User registered:", user);
-      notify();
+      await registerUser(Email, Password, Name);
       router.push("/auth/login");
-
-      // Optionally, redirect to login page
     } catch (err) {
       setError(err.message);
     }
@@ -81,7 +75,6 @@ const Page = () => {
             >
               Create Account
             </button>
-            <ToastContainer />
             {Error && <p style={{ color: "red" }}>{Error}</p>}
           </div>
         </form>
