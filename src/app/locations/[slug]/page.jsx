@@ -2,6 +2,7 @@
 import React from "react";
 import { useState, useEffect } from "react";
 import { Client, Databases, Query } from "appwrite";
+import { useContext } from "react";
 import {
   X,
   ChevronLeft,
@@ -9,21 +10,123 @@ import {
   Bookmark,
   BookmarkCheck,
 } from "lucide-react";
+import { AuthContext } from "@/app/auth/authprovider";
+import client from "@/app/appwrite/appwrite.config";
 
 export default function Page({ params }) {
   const [LocationDetail, setLocationDetail] = useState();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [weatherData, setWeatherData] = useState(null);
-  const [isBookmarked, setIsBookmarked] = useState(true);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const { user } = useContext(AuthContext);
+  console.log(user);
 
   const { slug } = React.use(params);
 
-  const checkBookMark = () => {
-    if (isBookmarked) {
-      setIsBookmarked(false);
-    } else {
-      setIsBookmarked(true);
+  // const checkBookMark = async () => {
+  //   const databases = new Databases(client);
+  //   if (isBookmarked) {
+  //     const bookmark = await databases.listDocuments(
+  //       "671e7595000efb31b37a",
+  //       "671e75a1001a8d6feb6c",
+  //       [
+  //         Query.equal("userId", user.$id),
+  //         Query.equal("placeId", LocationDetail.$id),
+  //       ]
+  //     );
+  //     if (bookmark.documents.length > 0) {
+  //       await databases.deleteDocument(
+  //         "671e7595000efb31b37a",
+  //         "671e75a1001a8d6feb6c",
+  //         bookmark.documents[0].$id
+  //       );
+  //       setIsBookmarked(false);
+  //     }
+  //   } else {
+  //     // Add bookmark
+  //     await databases.createDocument(
+  //       "671e7595000efb31b37a",
+  //       "671e75a1001a8d6feb6c",
+  //       "unique()",
+  //       {
+  //         userId: user.$id,
+  //         placeId: LocationDetail.$id,
+  //       }
+  //     );
+  //     setIsBookmarked(true);
+  //   }
+  // };
+
+  useEffect(() => {
+    const checkInitialBookmarkStatus = async () => {
+      if (!user || !LocationDetail) return;
+
+      const databases = new Databases(client);
+      try {
+        const bookmark = await databases.listDocuments(
+          "671e7595000efb31b37a",
+          "673a40d50002cde3b6b9",
+          [
+            Query.equal("userId", user.$id),
+            Query.equal("locationId", LocationDetail.$id),
+          ]
+        );
+        setIsBookmarked(bookmark.documents.length > 0);
+      } catch (error) {
+        console.error("Error checking bookmark status:", error);
+      }
+    };
+
+    checkInitialBookmarkStatus();
+  }, [user, LocationDetail]);
+
+  const handleBookmark = async () => {
+    if (!user) {
+      alert("Please log in to bookmark locations");
+      return;
+    }
+
+    const databases = new Databases(client);
+
+    try {
+      if (isBookmarked) {
+        // Remove bookmark
+        const bookmark = await databases.listDocuments(
+          "671e7595000efb31b37a",
+          "673a40d50002cde3b6b9",
+          [
+            Query.equal("userId", user.$id),
+            Query.equal("locationId", LocationDetail.$id),
+          ]
+        );
+
+        if (bookmark.documents.length > 0) {
+          await databases.deleteDocument(
+            "671e7595000efb31b37a",
+            "673a40d50002cde3b6b9",
+            bookmark.documents[0].$id
+          );
+          setIsBookmarked(false);
+        }
+      } else {
+        // Add bookmark
+        await databases.createDocument(
+          "671e7595000efb31b37a",
+          "673a40d50002cde3b6b9",
+          "unique()",
+          {
+            userId: user.$id,
+            locationId: LocationDetail.$id,
+            locationName: LocationDetail.Name,
+            createdAt: new Date().toISOString(),
+          }
+        );
+        setIsBookmarked(true);
+      }
+    } catch (error) {
+      console.error("Error managing bookmark:", error);
+      alert("Error managing bookmark. Please try again.");
     }
   };
 
@@ -63,6 +166,8 @@ export default function Page({ params }) {
         console.log(error);
       });
   }, [slug]);
+
+  console.log(LocationDetail);
 
   const openLightbox = (index) => {
     setCurrentImageIndex(index);
@@ -128,10 +233,10 @@ export default function Page({ params }) {
                   color="green"
                   fill="green"
                   className="cursor-pointer"
-                  onClick={checkBookMark}
+                  onClick={handleBookmark}
                 />
               ) : (
-                <Bookmark className="cursor-pointer" onClick={checkBookMark} />
+                <Bookmark className="cursor-pointer" onClick={handleBookmark} />
               )}
             </div>
             <img
